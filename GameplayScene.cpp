@@ -46,30 +46,45 @@ bool Gameplay::init()
 	//due to possible slow motion being toggled from previous player life, must always reset it
 	Director::getInstance()->getScheduler()->setTimeScale(1.0f);
 	
-	/*
-	tileMap = TMXTiledMap::create("tilemaps/map1.tmx");
-	auto wallLayer = tileMap->layerNamed("Walls");
+	tileMap = TMXTiledMap::create("tilemaps/mapX.tmx");		
+	auto wallLayer = tileMap->layerNamed("Walls");			//note: no layer can have 0 tiles on it, or the game will crash
+	auto floorLayer = tileMap->layerNamed("Floors");
 	//auto mapSize = tileMap->getMapSize();
-	tileMap->setPosition(Vec2(0,0)); //centre the map (X tiles * 32 pixels per tile), then align slightly so phone screen centre = map centre
+	tileMap->setPosition(Vec2(0,0)); 		//note: the map does not cover the top and bottom 60 pixels, which are at the moment fully covered in floor/ceiling
     this->addChild(tileMap, 2);
 	
-
-	for	(int x=0; x < 80; x++)
+	tileCount = 0;
+	
+	for	(int x=0; x < 40; x++)			//width of map, in tiles
 	{
-		for (int y = 0; y < 24; y++)
+		for (int y = 0; y < 12; y++)	//height of map, in tiles
 		{
-               //layer->setTileGID(tmpgid+1,ccp(x,y));
-			auto spriteTile = wallLayer->getTileAt(Vec2(x,y));
-			if (spriteTile != NULL)
+			auto spriteTileW = wallLayer->getTileAt(Vec2(x,y));
+			if (spriteTileW != NULL)
 			{
-				PhysicsBody* tilePhysics = PhysicsBody::createBox(Size(30.0f, 30.0f), PhysicsMaterial(1.0f, 1.0f, 0.0f));	//density, friction, bounciness 
+				auto tilePhysics = PhysicsBody::createBox(Size(60.0f, 60.0f), PhysicsMaterial(0.7f, 1.0f, 0.0f));	//density, friction, bounciness 
 				tilePhysics->setDynamic(false);
-				spriteTile->setPhysicsBody(tilePhysics);
+				spriteTileW->setPhysicsBody(tilePhysics);
+				
+				walls.push_back(spriteTileW);
+				
+				tileCount++;
+			}
+			
+			auto spriteTileF = floorLayer->getTileAt(Vec2(x,y));
+			if (spriteTileF != NULL)
+			{
+				auto tilePhysics = PhysicsBody::createBox(Size(240.0f, 60.0f), PhysicsMaterial(0.7f, 1.0f, 0.0f));	//density, friction, bounciness 
+				tilePhysics->setDynamic(false);
+				spriteTileF->setPhysicsBody(tilePhysics);
+				
+				walls.push_back(spriteTileF);
+				
+				tileCount++;
 			}
 		}
 	}
-	*/
-		
+
 	
     label1 = Label::createWithTTF("Hi World", "fonts/Marker Felt.ttf", 24);
     label1->setPosition(Vec2(visibleSize.width/2, visibleSize.height - 20));
@@ -130,21 +145,21 @@ bool Gameplay::init()
 	
 	Enemy* enemy1 = Enemy::create("grunt.png");
 	enemy1->setAnchorPoint(Vec2(0,0));
-	enemy1->setPosition(Vec2(700, 72));		//60
+	enemy1->setPosition(Vec2(700, 60));		//72
 	enemy1->setHealth(1);
 	this->addChild(enemy1, 2);
 	enemies.push_back(enemy1);
 	
 	Enemy* enemy2 = Enemy::create("grunt.png");
 	enemy2->setAnchorPoint(Vec2(0,0));
-	enemy2->setPosition(Vec2(400, 72));		//60
+	enemy2->setPosition(Vec2(400, 60));		//72
 	enemy2->setHealth(1);
 	this->addChild(enemy2, 2);
 	enemies.push_back(enemy2);
 	
 	Enemy* enemy3 = Enemy::create("grunt.png");
 	enemy3->setAnchorPoint(Vec2(0,0));
-	enemy3->setPosition(Vec2(200, 72));		//60
+	enemy3->setPosition(Vec2(200, 60));		//72
 	enemy3->setHealth(1);
 	this->addChild(enemy3, 2);
 	enemies.push_back(enemy3);
@@ -159,7 +174,7 @@ bool Gameplay::init()
 	//trailParticle->setTotalParticles(500);
 	this->addChild(trailParticle,3);
 	
-	
+	/*
 	Wall* wall1 = Wall::create("wallV.png");
 	wall1->setAnchorPoint(Vec2(0,0));
 	wall1->setPosition(Vec2(980, 72));
@@ -182,27 +197,28 @@ bool Gameplay::init()
 	
 	addDummyWalls();
 	
+	*/
+	
+	/*
 	Wall* floor = Wall::create("floor.png");
 	floor->setAnchorPoint(Vec2(0,0));
 	floor->setPosition(Vec2(0, 0));
 	floor->setTag(77);
 	this->addChild(floor, 1);
 	walls.push_back(floor);
-	/*	floor->setVisible(false);	*/
 	
 	Wall* ceiling = Wall::create("floor.png");
 	ceiling->setAnchorPoint(Vec2(0,0));
-	ceiling->setPosition(Vec2(0, 648));
+	ceiling->setPosition(Vec2(0, 660));
 	ceiling->setTag(78);
 	this->addChild(ceiling, 1);
 	walls.push_back(ceiling);
-	/*	ceiling->setVisible(false);		*/
 	
-	PhysicsBody* floorPhysics = PhysicsBody::createBox(Size(1280.0f, 72.0f), PhysicsMaterial(1.0f, 1.0f, 0.0f));	//density, friction, bounciness 
+	PhysicsBody* floorPhysics = PhysicsBody::createBox(Size(1280.0f, 60.0f), PhysicsMaterial(1.0f, 1.0f, 0.0f));	//density, friction, bounciness 
 	floorPhysics->setDynamic(false);
 	floor->setPhysicsBody(floorPhysics);
 	
-	PhysicsBody* ceilingPhysics = PhysicsBody::createBox(Size(1280.0f, 72.0f), PhysicsMaterial(1.0f, 1.0f, 0.0f));	//density, friction, bounciness 
+	PhysicsBody* ceilingPhysics = PhysicsBody::createBox(Size(1280.0f, 60.0f), PhysicsMaterial(1.0f, 1.0f, 0.0f));	//density, friction, bounciness 
 	ceilingPhysics->setDynamic(false);
 	ceiling->setPhysicsBody(ceilingPhysics);
 	
@@ -216,26 +232,26 @@ bool Gameplay::init()
 	floor2->setTag(77);
 	this->addChild(floor2, 1);
 	walls.push_back(floor2);
-	/*	floor->setVisible(false);	*/
+	floor->setVisible(false);
 	
 	Wall* ceiling2 = Wall::create("floor.png");
 	ceiling2->setAnchorPoint(Vec2(0,0));
-	ceiling2->setPosition(Vec2(1280, 648));
+	ceiling2->setPosition(Vec2(1280, 660));
 	ceiling2->setTag(78);
 	this->addChild(ceiling2, 1);
 	walls.push_back(ceiling2);
-	/*	ceiling->setVisible(false);		*/
+	ceiling->setVisible(false);	
 	
-	PhysicsBody* floorPhysics2 = PhysicsBody::createBox(Size(1280.0f, 72.0f), PhysicsMaterial(1.0f, 1.0f, 0.0f));	//density, friction, bounciness 
+	PhysicsBody* floorPhysics2 = PhysicsBody::createBox(Size(1280.0f, 60.0f), PhysicsMaterial(1.0f, 1.0f, 0.0f));	//density, friction, bounciness 
 	floorPhysics2->setDynamic(false);
 	floor2->setPhysicsBody(floorPhysics2);
 	
-	PhysicsBody* ceilingPhysics2 = PhysicsBody::createBox(Size(1280.0f, 72.0f), PhysicsMaterial(1.0f, 1.0f, 0.0f));	//density, friction, bounciness 
+	PhysicsBody* ceilingPhysics2 = PhysicsBody::createBox(Size(1280.0f, 60.0f), PhysicsMaterial(1.0f, 1.0f, 0.0f));	//density, friction, bounciness 
 	ceilingPhysics2->setDynamic(false);
 	ceiling2->setPhysicsBody(ceilingPhysics2);
 	
 	//END OF SECTION TO DELETE
-	
+	*/
 	
 	//this->runAction(Follow::create(player));
 	
@@ -280,18 +296,19 @@ void Gameplay::update(float dt)
 	
 	Vec2 playerPosDifference = lastPlayerPos - player->getPosition();
 	
-	/*	tileMap->setPositionX(tileMap->getPositionX() + playerPosDifference.x);	*/
+	tileMap->setPositionX(tileMap->getPositionX() + playerPosDifference.x);	
 
 	for (int i = 0 ; i <walls.size(); i++)
 	{
-		Wall* w = walls[i];
-		if (w->getTag() != 77 && w->getTag() != 78)		//every wall except the floor
-		{	w->setPositionX(w->getPositionX() + playerPosDifference.x);	 }	 //moves the same amount as the player, but in opposite direction
+		Sprite* w = walls[i];
+		//if (w->getTag() != 77 && w->getTag() != 78)		//every wall except the floor
+		//{	w->setPositionX(w->getPositionX() + playerPosDifference.x);	 }	 //moves the same amount as the player, but in opposite direction
+		w->setPositionX(w->getPositionX() + playerPosDifference.x);	
 	}
 	
 	
 	char text[256];
-	sprintf(text, "Arrow rotation: %f", -arrowR->getRotation()); 
+	sprintf(text, "Tile count: %d", tileCount); 
 	label1->setString(text);
 	
 	char text2[256];
@@ -351,12 +368,12 @@ void Gameplay::collidePlayerWalls()
 	
 	for (int j = 0; j<walls.size();j++)
 	{
-		Wall* w = walls[j];
+		Sprite* w = walls[j];
 		Rect wallBox = w->getBoundingBox();
 			
-		if (playerBox.intersectsRect(wallBox) && screenHeld)  
-		{
-			Director::getInstance()->getRunningScene()->getPhysicsWorld()->setSpeed(0.04f);		//or just 0
+		//if (playerBox.intersectsRect(wallBox) && screenHeld)  
+		//{
+					//or just 0
 			//Director::getInstance()->getScheduler()->setTimeScale(0.30f);			NOT WORKABLE YET, SLOWS DOWN ROTATION OF DIRECTIONAL ARROW
 			
 			if (wallBox.intersectsRect(playerRightBox))
@@ -365,7 +382,7 @@ void Gameplay::collidePlayerWalls()
 				arrowL->setVisible(true);	
 				arrowR->setVisible(false);	
 			}
-		}	
+		//}	
 	}
 }
 
@@ -378,6 +395,13 @@ bool Gameplay::onTouchBegan(Touch* touch, Event *event) {
 	Point touchLocation = touch->getLocationInView();
 	
 	screenHeld = true;
+	
+	if (getTimeTick() - lastSlowFocus > 5000)
+	{
+	Director::getInstance()->getRunningScene()->getPhysicsWorld()->setSpeed(0.04f);
+	
+	lastSlowFocus = getTimeTick();
+	}
 	
 	//arrowR->setVisible(true);
 	

@@ -52,13 +52,15 @@ private:
 	
 	unsigned long startTime;
 	
+	unsigned long lastSlowFocus;
+	
 	Player* player;
 	
 	cocos2d::Sprite* playerRight;
 	
 	std::vector<Enemy*> enemies;
 	
-	std::vector<Wall*> walls;
+	std::vector<Sprite*> walls;
 	
 	cocos2d::Label* label1;
 	cocos2d::Label* label2;
@@ -83,6 +85,8 @@ private:
 	bool movingRight;
 	
 	TMXTiledMap* tileMap;
+	
+	int tileCount;
 };
 
 #endif // __GAMEPLAY_SCENE_H__

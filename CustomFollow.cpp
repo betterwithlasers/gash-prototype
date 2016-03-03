@@ -87,7 +87,6 @@ void CustomFollow::step(float dt)
     }
 }
 
-//
 //(personal addition) this creates a pointer back to the layer that called the CustomFollow action, and is also the parent of the sprite being followed
 void CustomFollow::setSpriteParent(Layer* spriteParent)
 {	
