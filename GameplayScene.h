@@ -54,6 +54,8 @@ private:
 	
 	unsigned long lastSlowFocus;
 	
+	Rect spriteRect;
+	
 	Player* player;
 	
 	cocos2d::Sprite* playerRight;
