@@ -47,56 +47,22 @@ bool Gameplay::init()
 	//due to possible slow motion being toggled from previous player life, must always reset it
 	Director::getInstance()->getScheduler()->setTimeScale(1.0f);
 	
-	tileMap = TMXTiledMap::create("tilemaps/mapX.tmx");		
-	auto wallLayer = tileMap->layerNamed("Walls");			//note: no layer can have 0 tiles on it, or the game will crash
-	auto floorLayer = tileMap->layerNamed("Floors");
-	//auto mapSize = tileMap->getMapSize();
-	tileMap->setPosition(Vec2(0,0)); 		//note: the map does not cover the top and bottom 60 pixels, which are at the moment fully covered in floor/ceiling
-    this->addChild(tileMap, 2);
-	
 	tileCount = 0;
 	
-	for	(int x=0; x < 40; x++)			//width of map, in tiles
-	{
-		for (int y = 0; y < 12; y++)	//height of map, in tiles
-		{
-			auto spriteTileW = wallLayer->getTileAt(Vec2(x,y));
-			
-			if (spriteTileW != NULL)
-			{
-				//this->addChild(spriteTileW);
-				auto blackSprite = Sprite::create("black.png");
-				blackSprite->setPosition(spriteTileW->getPosition());
-				this->addChild(blackSprite);
-				
-				auto tilePhysics = PhysicsBody::createBox(Size(60.0f, 60.0f), PhysicsMaterial(0.7f, 1.0f, 0.0f));	//density, friction, bounciness 
-				tilePhysics->setDynamic(false);
-				spriteTileW->setPhysicsBody(tilePhysics);
-				
-				//spriteTileW->setTextureRect(Rect(0,0,60,60));
-				
-				walls.push_back(blackSprite);
-				
-				tileCount++;
-			}
-			
-			auto spriteTileF = floorLayer->getTileAt(Vec2(x,y));
-			if (spriteTileF != NULL)
-			{
-				//this->addChild(spriteTileF);
-				auto tilePhysics = PhysicsBody::createBox(Size(240.0f, 60.0f), PhysicsMaterial(0.7f, 1.0f, 0.0f));	//density, friction, bounciness 
-				tilePhysics->setDynamic(false);
-				spriteTileF->setPhysicsBody(tilePhysics);
-				
-				//spriteTileF->setTextureRect(Rect(0,0,240,60));
-				
-				//walls.push_back(spriteTileF);
-				
-				tileCount++;
-			}
-		}
-	}
-
+	TMXTiledMap* map1 = TMXTiledMap::create("tilemaps/mapX.tmx");		
+	map1->setPosition(Vec2(0,0)); 		
+    this->addChild(map1, 2);
+	maps.push_back(map1);
+	
+	populateMapPhysics(map1);
+	
+	TMXTiledMap* map2 = TMXTiledMap::create("tilemaps/map0.tmx");		
+	map2->setPosition(Vec2(2400,0)); 		
+    this->addChild(map2, 2);
+	maps.push_back(map2);
+	
+	populateMapPhysics(map2);
+	
 	
     label1 = Label::createWithTTF("Hi World", "fonts/Marker Felt.ttf", 24);
     label1->setPosition(Vec2(visibleSize.width/2, visibleSize.height - 20));
@@ -133,12 +99,6 @@ bool Gameplay::init()
 
 	//playerPhysics->setVelocity(Vec2(cocos2d::random(0,600), cocos2d::random(0,200)));
 	
-	playerRight = Sprite::create("collideRight.png");
-	playerRight->setAnchorPoint(Vec2(0,0));
-	playerRight->setPosition(Vec2(player->getPosition().x + 60, player->getPosition().y +11));
-	this->addChild(playerRight,4);
-	
-	playerRight->setVisible(false);
 	
 	arrowR = Sprite::create("arrow.png");
 	arrowR->setAnchorPoint(Vec2(0,0.5f));
@@ -186,63 +146,13 @@ bool Gameplay::init()
 	//trailParticle->setTotalParticles(500);
 	this->addChild(trailParticle,3);
 	
-	/*
-	Wall* wall1 = Wall::create("wallV.png");
-	wall1->setAnchorPoint(Vec2(0,0));
-	wall1->setPosition(Vec2(980, 72));
-	this->addChild(wall1, 2);
-	walls.push_back(wall1);
-	
-	PhysicsBody* wallPhysics = PhysicsBody::createBox(Size(50.0f, 250.0f), PhysicsMaterial(1.0f, 1.0f, 0.0f));	//density, friction, bounciness 
-	wallPhysics->setDynamic(false);
-	wall1->setPhysicsBody(wallPhysics);
-	
-	Wall* wall2 = Wall::create("wallH.png");
-	wall2->setAnchorPoint(Vec2(0,0));
-	wall2->setPosition(Vec2(500, 500));
-	this->addChild(wall2, 2);
-	walls.push_back(wall2);
-	
-	PhysicsBody* wallPhysics2 = PhysicsBody::createBox(Size(250.0f, 50.0f), PhysicsMaterial(1.0f, 1.0f, 0.0f));	//density, friction, bounciness 
-	wallPhysics2->setDynamic(false);
-	wall2->setPhysicsBody(wallPhysics2);
-	
-	*/
-	
-	/*
-	Wall* floor = Wall::create("floor.png");
-	floor->setAnchorPoint(Vec2(0,0));
-	floor->setPosition(Vec2(0, 0));
-	floor->setTag(77);
-	this->addChild(floor, 1);
-	walls.push_back(floor);
-	
-	Wall* ceiling = Wall::create("floor.png");
-	ceiling->setAnchorPoint(Vec2(0,0));
-	ceiling->setPosition(Vec2(0, 660));
-	ceiling->setTag(78);
-	this->addChild(ceiling, 1);
-	walls.push_back(ceiling);
-	
-	PhysicsBody* floorPhysics = PhysicsBody::createBox(Size(1280.0f, 60.0f), PhysicsMaterial(1.0f, 1.0f, 0.0f));	//density, friction, bounciness 
-	floorPhysics->setDynamic(false);
-	floor->setPhysicsBody(floorPhysics);
-	
-	PhysicsBody* ceilingPhysics = PhysicsBody::createBox(Size(1280.0f, 60.0f), PhysicsMaterial(1.0f, 1.0f, 0.0f));	//density, friction, bounciness 
-	ceilingPhysics->setDynamic(false);
-	ceiling->setPhysicsBody(ceilingPhysics);
-	*/
-	
-	
-	
-	//this->runAction(Follow::create(player));
 	
 	//CustomFollow* scrolling = CustomFollow::create(player, Rect(0, 0, visibleSize.width * 100, visibleSize.height));	//scrolling is limited within this rectangle
 	//scrolling->setSpriteParent(this);	//an important link (theres probably a 'cleaner' way to do this)
 	//this->runAction(scrolling);
 	
 	Rect followRect = Rect(0, 0, visibleSize.width * 100, visibleSize.height);
-	this->runAction(Follow::create(player, followRect));
+	//this->runAction(Follow::create(player, followRect));                      //NEED TO SOLVE THIS ASAP
 	
 	startTime = getTimeTick();
 	
@@ -265,7 +175,6 @@ void Gameplay::update(float dt)
 {
 	//collision section
 	collidePlayerEnemies();
-	collidePlayerWalls();
 	
 	playerParticle->setPosition(Vec2(player->getPositionX()+36, player->getPositionY()+36));
 	trailParticle->setPosition(Vec2(player->getPositionX()+36, player->getPositionY()+36));
@@ -273,12 +182,32 @@ void Gameplay::update(float dt)
 	arrowR->setPosition(Vec2(player->getPositionX()+36, player->getPositionY()+36));
 	arrowL->setPosition(Vec2(player->getPositionX()+36, player->getPositionY()+36));
 	
-	playerRight->setPosition(Vec2(player->getPosition().x + 60, player->getPosition().y +11));
-	
 	
 	Vec2 playerPosDifference = lastPlayerPos - player->getPosition();
+	scrollMaps(playerPosDifference);
 	
-	tileMap->setPositionX(tileMap->getPositionX() + playerPosDifference.x);	
+	
+	//THE NORMAL CASE
+	if (playerPosDifference.x < 0)
+	{
+		movingRight = true;
+		lastMoveRight = getTimeTick();
+	}
+	else if (playerPosDifference.x > 0)
+	{
+		if (getTimeTick() - lastMoveRight < 750) //&& getTimeTick() - lastSlowFocus > 2500)
+		{
+			movingRight = false;
+			
+			//Director::getInstance()->getRunningScene()->getPhysicsWorld()->setSpeed(0.04f);
+			//lastSlowFocus = getTimeTick();
+		}
+		else
+		{
+			movingRight = true;
+		}
+	}
+	
 	
 	if (movingRight && screenHeld)
 	{	
@@ -307,7 +236,7 @@ void Gameplay::update(float dt)
 	
 	
 	char text2[256];
-	sprintf(text2, " %d", 1); 
+	sprintf(text2, "# of tilemaps:  %d", maps.size()); 
 	label2->setString(text2);
 	
 	char text3[256];
@@ -349,26 +278,6 @@ void Gameplay::collidePlayerEnemies()
 				break;
 			}
 		}	
-	}
-}
-
-void Gameplay::collidePlayerWalls()
-{
-	Rect playerBox = player->getBoundingBox();
-	Rect playerRightBox = playerRight->getBoundingBox();
-	
-	movingRight = true;
-	
-	for (int j = 0; j<walls.size();j++)
-	{
-		Sprite* w = walls[j];
-		Rect wallBox = w->getBoundingBox();
-				
-		if (wallBox.intersectsRect(playerRightBox))
-		{	
-			movingRight = false;	
-			
-		}
 	}
 }
 
@@ -424,6 +333,80 @@ void Gameplay::onTouchEnded(Touch* touch, Event *event) {
 	arrowR->setVisible(false);
 	arrowL->setVisible(false);
 }
+
+
+void Gameplay::populateMapPhysics(TMXTiledMap* newMap)
+{
+	auto wallLayer = newMap->layerNamed("Walls");			//note: no layer can have 0 tiles on it, or the game will crash
+	auto floorLayer = newMap->layerNamed("Floors");
+	
+	for	(int x=0; x < 40; x++)			//width of map, in tiles
+	{
+		for (int y = 0; y < 12; y++)	//height of map, in tiles
+		{
+			auto spriteTileW = wallLayer->getTileAt(Vec2(x,y));
+			
+			if (spriteTileW != NULL)
+			{
+				//this->addChild(spriteTileW);
+				auto blackSprite = Sprite::create("black.png");
+				blackSprite->setPosition(spriteTileW->getPosition());
+				this->addChild(blackSprite);
+				
+				auto tilePhysics = PhysicsBody::createBox(Size(60.0f, 60.0f), PhysicsMaterial(0.7f, 1.0f, 0.0f));	//density, friction, bounciness 
+				tilePhysics->setDynamic(false);
+				spriteTileW->setPhysicsBody(tilePhysics);
+				
+				walls.push_back(blackSprite);
+				
+				tileCount++;
+			}
+			
+			auto spriteTileF = floorLayer->getTileAt(Vec2(x,y));
+			if (spriteTileF != NULL)
+			{
+				//this->addChild(spriteTileF);
+				auto tilePhysics = PhysicsBody::createBox(Size(240.0f, 60.0f), PhysicsMaterial(0.7f, 1.0f, 0.0f));	//density, friction, bounciness 
+				tilePhysics->setDynamic(false);
+				spriteTileF->setPhysicsBody(tilePhysics);
+				
+				//walls.push_back(spriteTileF);
+				
+				tileCount++;
+			}
+		}
+	}	
+}
+
+//MAP SCROLLING AND HANDLING
+void Gameplay::scrollMaps(Vec2 playerPosDifference)
+{
+	for (int i = 0; i< maps.size(); i ++)
+	{
+		TMXTiledMap* m = maps[i];
+		m->setPositionX(m->getPositionX() + playerPosDifference.x);	
+		
+		//add new maps
+		/*
+	    if (maps.back()->getPosition().x < -1120) 	//the 2400px width map is still fully covering the screen at x-pos: -1120
+		{
+			TMXTiledMap* newMap = TMXTiledMap::create("tilemaps/map0.tmx");		
+			newMap->setPosition(Vec2(player->getPosition().x,0)); 		//add a new map just off-screen to the right
+			this->addChild(newMap, 2);
+			maps.push_back(newMap);
+			
+			populateMapPhysics(newMap);	
+		}
+		*/
+		if (m->getPosition().x < -2400 )	//if any map is completely invisble to the left
+		{
+			this->removeChild(m);			//delete it from the screen
+			maps.erase(maps.begin()+i);		//and the vector of maps
+			break;
+		}
+	}
+}
+
 
 //helper method to keep angles between 0 and 360 for clarity
 float Gameplay::normaliseAngle(float theta)

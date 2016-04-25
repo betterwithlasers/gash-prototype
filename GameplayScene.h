@@ -38,9 +38,9 @@ public:
 	float normaliseAngle(float theta);
 	
 	void collidePlayerEnemies();
-	void collidePlayerWalls();
 	
-	void addDummyWalls();
+	void populateMapPhysics(TMXTiledMap* newMap);
+	void scrollMaps(Vec2 playerPosDifference);
 	
     // implement the "static create()" method manually
     CREATE_FUNC(Gameplay);
@@ -53,6 +53,8 @@ private:
 	unsigned long startTime;
 	
 	unsigned long lastSlowFocus;
+	
+	unsigned long lastMoveRight;
 	
 	Rect spriteRect;
 	
@@ -86,7 +88,7 @@ private:
 	
 	bool movingRight;
 	
-	TMXTiledMap* tileMap;
+	std::vector<TMXTiledMap*> maps;
 	
 	int tileCount;
 };
